@@ -71,10 +71,14 @@
       "title": "Back-End Architecture (Node.js/Express/NestJS)",
       "max_points": 4,
       "weight": 1.0,
-      "evaluation_method": "gpt_semantic",
-      "unit_test_weight": 0,
-      "gpt_weight": 1.0,
-      "test_files": [],
+      "evaluation_method": "hybrid",
+      "unit_test_weight": 0.7,
+      "gpt_weight": 0.3,
+      "test_files": [
+        "tests/backend/api-endpoints.test.js",
+        "tests/backend/middleware.test.js",
+        "tests/backend/error-handling.test.js"
+      ],
       "files_to_analyze": [
         "grading-folder/backend/routes/**/*.js",
         "grading-folder/backend/controllers/**/*.js",
@@ -95,10 +99,14 @@
       "title": "Database Design & Integration",
       "max_points": 4,
       "weight": 1.0,
-      "evaluation_method": "gpt_semantic",
-      "unit_test_weight": 0,
-      "gpt_weight": 1.0,
-      "test_files": [],
+      "evaluation_method": "hybrid",
+      "unit_test_weight": 0.6,
+      "gpt_weight": 0.4,
+      "test_files": [
+        "tests/backend/database.test.js",
+        "tests/backend/models.test.js",
+        "tests/backend/crud-operations.test.js"
+      ],
       "files_to_analyze": [
         "grading-folder/backend/models/**/*.js",
         "grading-folder/backend/database/**/*.js",
@@ -117,10 +125,14 @@
       "title": "Authentication & Authorization",
       "max_points": 4,
       "weight": 1.0,
-      "evaluation_method": "gpt_semantic",
-      "unit_test_weight": 0,
-      "gpt_weight": 1.0,
-      "test_files": [],
+      "evaluation_method": "hybrid",
+      "unit_test_weight": 0.8,
+      "gpt_weight": 0.2,
+      "test_files": [
+        "tests/backend/auth.test.js",
+        "tests/backend/protected-routes.test.js",
+        "tests/backend/token-management.test.js"
+      ],
       "files_to_analyze": [
         "grading-folder/backend/middleware/auth.js",
         "grading-folder/backend/controllers/authController.js",
@@ -139,10 +151,14 @@
       "title": "Front-End/Back-End Integration",
       "max_points": 4,
       "weight": 1.0,
-      "evaluation_method": "gpt_semantic",
-      "unit_test_weight": 0,
-      "gpt_weight": 1.0,
-      "test_files": [],
+      "evaluation_method": "hybrid",
+      "unit_test_weight": 0.9,
+      "gpt_weight": 0.1,
+      "test_files": [
+        "tests/integration/api-calls.test.js",
+        "tests/integration/data-flow.test.js",
+        "tests/integration/error-handling.test.js"
+      ],
       "files_to_analyze": [
         "grading-folder/frontend/services/**/*.js",
         "grading-folder/frontend/api/**/*.js",
