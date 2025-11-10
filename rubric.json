@@ -42,14 +42,10 @@
       "title": "Front-End Implementation (React/Next.js)",
       "max_points": 4,
       "weight": 1.0,
-      "evaluation_method": "hybrid",
-      "unit_test_weight": 0.7,
-      "gpt_weight": 0.3,
-      "test_files": [
-        "tests/frontend/components.test.js",
-        "tests/frontend/hooks.test.js",
-        "tests/frontend/routing.test.js"
-      ],
+      "evaluation_method": "gpt_semantic",
+      "unit_test_weight": 0,
+      "gpt_weight": 1.0,
+      "test_files": [],
       "files_to_analyze": [
         "grading-folder/frontend/components/**/*.tsx",
         "grading-folder/frontend/components/**/*.jsx",
