@@ -1,52 +1,48 @@
-import { createContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import { createContext, useContext, useState, useEffect } from "react";
 
 const AuthContext = createContext();
-const API_URL = import.meta.env.VITE_API_URL;
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Use useEffect to load user from localStorage after component mounts
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    const userInfo = localStorage.getItem("userInfo");
+    if (userInfo) {
+      try {
+        setUser(JSON.parse(userInfo));
+      } catch (error) {
+        console.error("Error parsing user info:", error);
+        localStorage.removeItem("userInfo");
+      }
     }
     setLoading(false);
   }, []);
 
-  const register = async (userData) => {
-    const res = await axios.post(`${API_URL}/api/auth/register`, userData);
-    localStorage.setItem('user', JSON.stringify(res.data));
-    localStorage.setItem('token', res.data.token);
-    setUser(res.data);
-    return res.data;
-  };
-
-  const login = async (credentials) => {
-    const res = await axios.post(`${API_URL}/api/auth/login`, credentials);
-    localStorage.setItem('user', JSON.stringify(res.data));
-    localStorage.setItem('token', res.data.token);
-    setUser(res.data);
-    return res.data;
+  const login = (userData) => {
+    setUser(userData);
+    localStorage.setItem("userInfo", JSON.stringify(userData));
   };
 
   const logout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
     setUser(null);
+    localStorage.removeItem("userInfo");
   };
 
-  const value = {
-    user,
-    loading,
-    register,
-    login,
-    logout
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  // Provide loading state to prevent redirects during initial load
+  return (
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
-export default AuthContext;
+// eslint-disable-next-line react-refresh/only-export-components
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+};
