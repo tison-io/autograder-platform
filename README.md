@@ -112,6 +112,6 @@ Private - Educational Project
 
 ## 👥 Team
 
-Team Lead: TBD
+Team Lead: [Kimani Vincent](https://github.com/xfince) 
 Timeline: 12 weeks (Jan 6 - March 30, 2026)
 Target Launch: End of March 2026
