@@ -1,0 +1,340 @@
+// AutoGrader Platform - Database Schema
+// Complete Prisma schema with all models and relationships
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum UserRole {
+  PROFESSOR
+  STUDENT
+  ADMIN
+}
+
+enum SubmissionStatus {
+  PENDING
+  CLONING
+  TESTING
+  ANALYZING
+  GRADING
+  COMPLETED
+  FAILED
+}
+
+enum TestTemplateType {
+  BACKEND_API
+  FRONTEND_COMPONENTS
+  DATABASE
+  INTEGRATION
+  SECURITY
+  PERFORMANCE
+  CUSTOM
+}
+
+// ============================================
+// USER & AUTHENTICATION
+// ============================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  firstName     String
+  lastName      String
+  role          UserRole
+  githubUsername String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  coursesTeaching Course[] @relation("ProfessorCourses")
+  enrollments     Enrollment[]
+  submissions     Submission[]
+  
+  @@index([email])
+  @@index([role])
+}
+
+// ============================================
+// COURSE MANAGEMENT
+// ============================================
+
+model Course {
+  id          String    @id @default(cuid())
+  name        String
+  code        String    @unique // e.g., "CS401"
+  description String?
+  semester    String    // e.g., "Fall 2025"
+  year        Int
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relations
+  professorId String
+  professor   User      @relation("ProfessorCourses", fields: [professorId], references: [id])
+  assignments Assignment[]
+  enrollments Enrollment[]
+  
+  @@index([professorId])
+  @@index([code])
+}
+
+model Enrollment {
+  id         String   @id @default(cuid())
+  enrolledAt DateTime @default(now())
+  
+  // Relations
+  studentId  String
+  student    User     @relation(fields: [studentId], references: [id])
+  courseId   String
+  course     Course   @relation(fields: [courseId], references: [id])
+  
+  @@unique([studentId, courseId])
+  @@index([studentId])
+  @@index([courseId])
+}
+
+// ============================================
+// ASSIGNMENTS & RUBRICS
+// ============================================
+
+model Assignment {
+  id              String    @id @default(cuid())
+  title           String
+  description     String    @db.Text
+  dueDate         DateTime
+  maxSubmissions  Int       @default(5)
+  allowLateSubmissions Boolean @default(false)
+  isPublished     Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  courseId        String
+  course          Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  rubricId        String    @unique
+  rubric          Rubric    @relation(fields: [rubricId], references: [id])
+  testSuites      TestSuite[]
+  submissions     Submission[]
+  
+  @@index([courseId])
+  @@index([dueDate])
+}
+
+model Rubric {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  totalPoints Int
+  passingGrade Int
+  metadata    Json      // Tech stack, folder structure, etc.
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relations
+  assignment  Assignment?
+  criteria    Criterion[]
+}
+
+model Criterion {
+  id                 String   @id @default(cuid())
+  title              String
+  maxPoints          Int
+  weight             Float    @default(1.0)
+  evaluationMethod   String   // "unit_test", "gpt_semantic", "hybrid"
+  unitTestWeight     Float    @default(0)
+  gptWeight          Float    @default(1.0)
+  gptInstructions    String   @db.Text
+  filesToAnalyze     String[] // File patterns
+  levels             Json     // Excellent, Good, Fair, Poor descriptions
+  order              Int      @default(0)
+  
+  // Relations
+  rubricId           String
+  rubric             Rubric   @relation(fields: [rubricId], references: [id], onDelete: Cascade)
+  testFiles          TestFile[]
+  
+  @@index([rubricId])
+}
+
+// ============================================
+// TEST SUITES & FILES
+// ============================================
+
+model TestSuite {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  isTemplate  Boolean  @default(false)
+  templateType TestTemplateType?
+  parameters  Json?    // For template-based tests
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  assignmentId String
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  testFiles    TestFile[]
+  
+  @@index([assignmentId])
+}
+
+model TestFile {
+  id          String   @id @default(cuid())
+  fileName    String
+  filePath    String   // Relative path in test structure
+  content     String   @db.Text
+  isGenerated Boolean  @default(false) // True if generated from template
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  testSuiteId String
+  testSuite   TestSuite @relation(fields: [testSuiteId], references: [id], onDelete: Cascade)
+  criterionId String?
+  criterion   Criterion? @relation(fields: [criterionId], references: [id])
+  
+  @@index([testSuiteId])
+}
+
+// ============================================
+// SUBMISSIONS & GRADING
+// ============================================
+
+model Submission {
+  id               String           @id @default(cuid())
+  githubRepoUrl    String
+  commitHash       String?          // Specific commit being graded
+  status           SubmissionStatus @default(PENDING)
+  attemptNumber    Int              // 1-5
+  submittedAt      DateTime         @default(now())
+  gradingStartedAt DateTime?
+  gradingCompletedAt DateTime?
+  
+  // Grading Results
+  totalScore       Float?
+  maxScore         Float?
+  percentage       Float?
+  letterGrade      String?
+  buildSuccess     Boolean?
+  
+  // Metadata
+  metadata         Json?            // Git stats, file counts, etc.
+  errorMessage     String?          @db.Text
+  
+  // Relations
+  studentId        String
+  student          User             @relation(fields: [studentId], references: [id])
+  assignmentId     String
+  assignment       Assignment       @relation(fields: [assignmentId], references: [id])
+  
+  gradingJob       GradingJob?
+  criteriaScores   CriterionScore[]
+  testResults      TestResult[]
+  artifacts        Artifact[]
+  
+  @@index([studentId])
+  @@index([assignmentId])
+  @@index([status])
+  @@index([submittedAt])
+}
+
+model GradingJob {
+  id          String   @id @default(cuid())
+  jobId       String   @unique // Bull MQ job ID
+  status      String   // "waiting", "active", "completed", "failed"
+  progress    Int      @default(0) // 0-100
+  currentStep String?  // "cloning", "testing", "analyzing", etc.
+  logs        String[] @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  submissionId String   @unique
+  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  
+  @@index([jobId])
+  @@index([status])
+}
+
+model CriterionScore {
+  id             String   @id @default(cuid())
+  score          Float
+  maxPoints      Float
+  levelAchieved  String?
+  justification  String   @db.Text
+  strengths      String[] @default([])
+  weaknesses     String[] @default([])
+  improvements   String[] @default([])
+  filesAnalyzed  String[] @default([])
+  
+  // GPT metadata
+  gptScore       Float?
+  unitTestScore  Float?
+  tokensUsed     Int?
+  
+  // Relations
+  submissionId   String
+  submission     Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  criterionId    String
+  
+  @@index([submissionId])
+}
+
+model TestResult {
+  id          String   @id @default(cuid())
+  suiteName   String
+  total       Int
+  passed      Int
+  failed      Int
+  duration    Int      // milliseconds
+  details     Json     // Individual test results
+  
+  // Relations
+  submissionId String
+  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  
+  @@index([submissionId])
+}
+
+model Artifact {
+  id          String   @id @default(cuid())
+  type        String   // "report", "logs", "code_summary", "git_analysis"
+  fileName    String
+  s3Key       String   // S3 object key
+  s3Url       String   // Signed URL (temporary)
+  size        Int      // bytes
+  createdAt   DateTime @default(now())
+  
+  // Relations
+  submissionId String
+  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  
+  @@index([submissionId])
+}
+
+model LangSmithTrace {
+  id          String   @id @default(cuid())
+  traceId     String   @unique
+  runId       String
+  criterionId String
+  submissionId String
+  tokensUsed  Int
+  latency     Int      // milliseconds
+  cost        Float
+  metadata    Json
+  createdAt   DateTime @default(now())
+  
+  @@index([submissionId])
+  @@index([traceId])
+}

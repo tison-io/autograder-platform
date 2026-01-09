@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: autograder-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: autograder
+      POSTGRES_PASSWORD: autograder_dev_password
+      POSTGRES_DB: autograder_dev
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U autograder -d autograder_dev']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - autograder-network
+
+  # Redis Cache & Queue
+  redis:
+    image: redis:7-alpine
+    container_name: autograder-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass autograder_redis_password
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', '--raw', 'incr', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - autograder-network
+
+  # Prisma Studio (Optional - for development)
+  # Uncomment to run Prisma Studio in Docker
+  # prisma-studio:
+  #   image: timothyjmiller/prisma-studio:latest
+  #   container_name: autograder-prisma-studio
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - postgres
+  #   environment:
+  #     DATABASE_URL: postgresql://autograder:autograder_dev_password@postgres:5432/autograder_dev
+  #   ports:
+  #     - '5555:5555'
+  #   networks:
+  #     - autograder-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  autograder-network:
+    driver: bridge
