@@ -7,8 +7,9 @@ import { PrismaModule } from './common/prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { CoursesModule } from './courses/courses.module';
-// import { AssignmentsModule } from './assignments/assignments.module';
-// import { RubricsModule } from './rubrics/rubrics.module';
+import { AssignmentsModule } from './assignments/assignments.module';
+import { RubricsModule } from './rubrics/rubrics.module';
+import { TestSuitesModule } from './test-suites/test-suites.module';
 // import { SubmissionsModule } from './submissions/submissions.module';
 // import { GradingModule } from './grading/grading.module';
 // import { WebsocketsModule } from './websockets/websockets.module';
@@ -24,9 +25,10 @@ import { CoursesModule } from './courses/courses.module';
     AuthModule,
     UsersModule,
     CoursesModule,
+    AssignmentsModule,
+    RubricsModule,
+    TestSuitesModule,
     // TODO: Implement these modules to match Prisma schema
-    // AssignmentsModule,
-    // RubricsModule,
     // SubmissionsModule,
     // GradingModule,
     // WebsocketsModule,

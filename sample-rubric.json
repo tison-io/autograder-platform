@@ -1,0 +1,100 @@
+{
+  "rubric": {
+    "name": "Full-Stack Web Application Assessment",
+    "description": "Comprehensive evaluation rubric for full-stack web development projects",
+    "totalPoints": 100,
+    "passingGrade": 70,
+    "metadata": {
+      "techStack": ["Node.js", "React", "PostgreSQL", "TypeScript"],
+      "projectType": "full-stack-web-app",
+      "difficulty": "advanced"
+    }
+  },
+  "criteria": [
+    {
+      "title": "API Endpoints Implementation",
+      "maxPoints": 30,
+      "weight": 1.5,
+      "evaluationMethod": "hybrid",
+      "unitTestWeight": 0.6,
+      "gptWeight": 0.4,
+      "gptInstructions": "Evaluate the RESTful API design, endpoint structure, HTTP methods usage, request/response handling, and overall API architecture quality.",
+      "filesToAnalyze": ["src/api/**/*.ts", "src/controllers/**/*.ts", "src/routes/**/*.ts"],
+      "levels": {
+        "excellent": "All endpoints properly implemented with correct HTTP methods, comprehensive error handling, and excellent RESTful design",
+        "good": "Most endpoints working correctly with proper HTTP methods and adequate error handling",
+        "fair": "Basic endpoints functional but with some HTTP method issues or limited error handling",
+        "poor": "Endpoints missing, incorrect HTTP methods, or lacking error handling"
+      },
+      "order": 0
+    },
+    {
+      "title": "Database Schema & Migrations",
+      "maxPoints": 20,
+      "weight": 1.0,
+      "evaluationMethod": "gpt_semantic",
+      "unitTestWeight": 0,
+      "gptWeight": 1.0,
+      "gptInstructions": "Assess database schema design, table relationships, data types, constraints, indexes, and migration files. Look for normalization, referential integrity, and proper use of database features.",
+      "filesToAnalyze": ["prisma/schema.prisma", "migrations/**/*.sql", "src/models/**/*.ts"],
+      "levels": {
+        "excellent": "Well-normalized schema with proper relationships, constraints, indexes, and comprehensive migrations",
+        "good": "Functional schema with appropriate relationships and basic constraints",
+        "fair": "Basic schema structure but missing some relationships or constraints",
+        "poor": "Poor schema design with missing relationships or incorrect data types"
+      },
+      "order": 1
+    },
+    {
+      "title": "Unit & Integration Tests",
+      "maxPoints": 25,
+      "weight": 1.2,
+      "evaluationMethod": "unit_test",
+      "unitTestWeight": 1.0,
+      "gptWeight": 0,
+      "gptInstructions": "N/A - Evaluated purely through automated test execution",
+      "filesToAnalyze": ["tests/**/*.test.ts", "__tests__/**/*.test.ts"],
+      "levels": {
+        "excellent": "Comprehensive test coverage (>80%) with unit and integration tests passing",
+        "good": "Good test coverage (60-80%) with most tests passing",
+        "fair": "Basic test coverage (40-60%) with some tests passing",
+        "poor": "Minimal or no test coverage, or most tests failing"
+      },
+      "order": 2
+    },
+    {
+      "title": "Authentication & Authorization",
+      "maxPoints": 15,
+      "weight": 1.0,
+      "evaluationMethod": "hybrid",
+      "unitTestWeight": 0.5,
+      "gptWeight": 0.5,
+      "gptInstructions": "Evaluate authentication implementation (JWT, sessions, etc.), password security (hashing), authorization logic (role-based access control), and protection of sensitive routes.",
+      "filesToAnalyze": ["src/auth/**/*.ts", "src/middleware/**/*.ts", "src/guards/**/*.ts"],
+      "levels": {
+        "excellent": "Secure authentication with proper password hashing, JWT implementation, and comprehensive RBAC",
+        "good": "Functional authentication with basic security measures and role-based access",
+        "fair": "Basic authentication implemented but with some security concerns",
+        "poor": "Insecure or missing authentication/authorization"
+      },
+      "order": 3
+    },
+    {
+      "title": "Code Quality & TypeScript Usage",
+      "maxPoints": 10,
+      "weight": 0.8,
+      "evaluationMethod": "gpt_semantic",
+      "unitTestWeight": 0,
+      "gptWeight": 1.0,
+      "gptInstructions": "Assess TypeScript usage, type safety, code organization, naming conventions, code reusability, separation of concerns, and overall code cleanliness. Look for proper use of interfaces, types, generics, and TypeScript best practices.",
+      "filesToAnalyze": ["src/**/*.ts"],
+      "levels": {
+        "excellent": "Excellent TypeScript usage with proper types, interfaces, clean code structure, and best practices",
+        "good": "Good type usage with organized code and reasonable practices",
+        "fair": "Basic TypeScript usage but with some 'any' types or organizational issues",
+        "poor": "Poor type usage, disorganized code, or extensive use of 'any'"
+      },
+      "order": 4
+    }
+  ]
+}
