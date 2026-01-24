@@ -48,11 +48,19 @@
     "express": "4.21.2"
   },
   "lint-staged": {
-    "apps/**/*.{ts,tsx}": [
+    "apps/**/src/**/*.{ts,tsx}": [
       "eslint --fix",
       "prettier --write"
     ],
-    "*.{js,jsx,json,md}": [
+    "apps/**/test/**/*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "packages/**/*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{js,json,md}": [
       "prettier --write"
     ]
   }
