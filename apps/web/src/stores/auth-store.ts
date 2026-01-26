@@ -7,6 +7,8 @@ export interface User {
   firstName: string;
   lastName: string;
   role: 'STUDENT' | 'PROFESSOR' | 'ADMIN';
+  githubUsername?: string | null;
+  avatarUrl?: string | null;
   createdAt: string;
   updatedAt: string;
 }

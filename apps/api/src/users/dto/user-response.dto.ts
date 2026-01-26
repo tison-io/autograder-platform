@@ -7,6 +7,7 @@ export class UserResponseDto {
   lastName: string;
   role: UserRole;
   githubUsername: string | null;
+  avatarUrl: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

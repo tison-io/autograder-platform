@@ -1,6 +1,6 @@
 # Known Issues & Future Work
 
-**Last Updated**: January 17, 2026  
+**Last Updated**: January 26, 2026  
 **Project**: AutoGrader Platform
 
 ## 🔴 Critical Issues
@@ -84,10 +84,11 @@ Move Next.js app to workspace root, but this breaks monorepo architecture.
 
 ### 2. Redis Authentication Not Configured
 
-**Status**: 🟡 Open  
+**Status**: ✅ Fixed  
 **Discovered**: Sprint 0 Day 5  
+**Fixed**: Sprint 0 Day 8
 **Priority**: Low-Medium  
-**Assignee**: Sprint 1
+**Assignee**: Completed
 
 **Description**:
 Workers service shows Redis authentication error at startup, though workers still function correctly:
@@ -102,33 +103,12 @@ ReplyError: NOAUTH Authentication required.
 - Bull MQ attempts authentication by default
 - Workers continue to work despite error
 
-**Impact**:
+**Solution Applied**:
 
-- ⚠️ Logs show error messages (cosmetic)
-- ✅ Workers function correctly
-- ⚠️ Redis is unprotected (development only)
-- ❌ Not production-ready
-
-**Solution**:
-
-1. Add Redis password to `docker-compose.yml`:
-
-```yaml
-redis:
-  image: redis:7-alpine
-  command: redis-server --requirepass ${REDIS_PASSWORD}
-  environment:
-    - REDIS_PASSWORD=dev_password_change_in_prod
-```
-
-2. Update `.env` files:
-
-```env
-REDIS_PASSWORD=dev_password_change_in_prod
-REDIS_URL=redis://:dev_password_change_in_prod@localhost:6379
-```
-
-3. Update Bull MQ configuration in workers to use password.
+1. Redis password already configured in `docker-compose.yml` with `--requirepass`
+2. Updated Redis healthcheck to use password authentication
+3. Updated API `.env` file with correct Redis password
+4. Workers already configured to use `REDIS_PASSWORD` environment variable
 
 **References**:
 
@@ -171,10 +151,11 @@ Downgraded to `mime@3.0.0` in `apps/api/package.json`.
 
 ### 4. Next.js Config Warning: Invalid Turbopack Key
 
-**Status**: 🟡 Open  
+**Status**: ✅ Fixed  
 **Discovered**: Sprint 0 Day 5  
+**Fixed**: Sprint 0 Day 7
 **Priority**: Low (cosmetic)  
-**Assignee**: Sprint 1
+**Assignee**: Completed
 
 **Description**:
 Next.js shows configuration warning on every startup:
@@ -184,34 +165,14 @@ Next.js shows configuration warning on every startup:
 ⚠     Unrecognized key(s) in object: 'turbopack' at "experimental"
 ```
 
-**Root Cause**:
-The `turbopack` configuration key was added experimentally but is not officially supported in `experimental` config section.
-
-**Impact**:
-
-- ⚠️ Warning message on every dev server start
-- ✅ Does not affect functionality
-- ✅ Build works correctly
-
-**Solution**:
-Remove turbopack configuration from `apps/web/next.config.ts`:
+**Solution Applied**:
+Removed turbopack configuration from `apps/web/next.config.ts`. The config now only includes:
 
 ```typescript
-// Before
-experimental: {
-  optimizePackageImports: ['lucide-react'],
-  turbopack: {
-    root: '/app',
-  },
-}
-
-// After
 experimental: {
   optimizePackageImports: ['lucide-react'],
 }
 ```
-
-Note: This was added to fix containerization but didn't work, so safe to remove.
 
 ---
 
@@ -353,4 +314,4 @@ Support multiple environments (dev, staging, production) with different Docker c
 
 **Document Maintained By**: Development Team  
 **Review Frequency**: Updated during each sprint  
-**Last Review**: Sprint 0 Day 5 (January 17, 2026)
+**Last Review**: Sprint 0 Day 8 (January 26, 2026)

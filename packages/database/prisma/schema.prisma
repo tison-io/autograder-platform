@@ -53,6 +53,7 @@ model User {
   lastName      String
   role          UserRole
   githubUsername String?
+  avatarUrl     String?   // Profile picture URL
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   

@@ -21,7 +21,6 @@ jest.mock('bcryptjs', () => ({
 
 describe('AuthService', () => {
   let service: AuthService;
-  let _jwtService: JwtService;
   let prismaService: ReturnType<typeof createMockPrismaService>;
 
   const mockJwtService = {

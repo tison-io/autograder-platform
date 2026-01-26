@@ -107,6 +107,24 @@ export class UsersService {
     });
   }
 
+  async updateAvatar(userId: string, avatarUrl: string): Promise<UserResponseDto> {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { avatarUrl },
+    });
+
+    return this.toResponseDto(user);
+  }
+
+  async removeAvatar(userId: string): Promise<UserResponseDto> {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { avatarUrl: null },
+    });
+
+    return this.toResponseDto(user);
+  }
+
   private toResponseDto(user: any): UserResponseDto {
     return {
       id: user.id,
@@ -115,6 +133,7 @@ export class UsersService {
       lastName: user.lastName,
       role: user.role,
       githubUsername: user.githubUsername,
+      avatarUrl: user.avatarUrl,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };

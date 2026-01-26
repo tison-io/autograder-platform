@@ -34,5 +34,22 @@ export const registerSchema = z
     path: ['confirmPassword'],
   });
 
+export const profileSchema = z.object({
+  firstName: z
+    .string()
+    .min(1, 'First name is required')
+    .min(2, 'First name must be at least 2 characters'),
+  lastName: z
+    .string()
+    .min(1, 'Last name is required')
+    .min(2, 'Last name must be at least 2 characters'),
+  githubUsername: z
+    .string()
+    .regex(/^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,37}[a-zA-Z0-9])?$/, 'Invalid GitHub username format')
+    .optional()
+    .or(z.literal('')),
+});
+
 export type LoginFormData = z.infer<typeof loginSchema>;
 export type RegisterFormData = z.infer<typeof registerSchema>;
+export type ProfileFormData = z.infer<typeof profileSchema>;
