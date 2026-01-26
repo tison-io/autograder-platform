@@ -2,7 +2,7 @@ import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { BadRequestException } from '@nestjs/common';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 // Allowed image MIME types
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -22,7 +22,7 @@ export const ensureUploadDirExists = () => {
 
 // Filter for image files only
 export const imageFileFilter = (
-  req: any,
+  _req: Express.Request,
   file: Express.Multer.File,
   callback: (error: Error | null, acceptFile: boolean) => void,
 ) => {
@@ -43,8 +43,8 @@ export const avatarStorage = diskStorage({
   },
   filename: (req, file, callback) => {
     // Generate unique filename: userId-uuid.ext
-    const userId = (req as any).user?.id || 'unknown';
-    const uniqueSuffix = uuidv4();
+    const userId = (req as Express.Request & { user?: { id: string } }).user?.id || 'unknown';
+    const uniqueSuffix = randomUUID();
     const ext = extname(file.originalname).toLowerCase();
     const filename = `${userId}-${uniqueSuffix}${ext}`;
     callback(null, filename);

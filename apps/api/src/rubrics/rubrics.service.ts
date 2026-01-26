@@ -1,10 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
-import {
-  CreateRubricWithCriteriaDto,
-  UpdateRubricDto,
-  RubricResponseDto,
-} from './dto';
+import { Prisma } from '@prisma/client';
+import { CreateRubricWithCriteriaDto, UpdateRubricDto, RubricResponseDto } from './dto';
 import { RubricValidationService } from './rubric-validation.service';
 
 @Injectable()
@@ -32,7 +29,7 @@ export class RubricsService {
           description: dto.rubric.description,
           totalPoints: dto.rubric.totalPoints,
           passingGrade: dto.rubric.passingGrade,
-          metadata: dto.rubric.metadata || {},
+          metadata: (dto.rubric.metadata || {}) as Prisma.InputJsonValue,
         },
       });
 
@@ -73,7 +70,7 @@ export class RubricsService {
 
   async uploadFromJson(jsonContent: string): Promise<RubricResponseDto> {
     // Parse JSON
-    let parsedJson: any;
+    let parsedJson: unknown;
     try {
       parsedJson = JSON.parse(jsonContent);
     } catch {
@@ -159,7 +156,7 @@ export class RubricsService {
         ...(dto.description !== undefined && { description: dto.description }),
         ...(dto.totalPoints && { totalPoints: dto.totalPoints }),
         ...(dto.passingGrade !== undefined && { passingGrade: dto.passingGrade }),
-        ...(dto.metadata && { metadata: dto.metadata }),
+        ...(dto.metadata && { metadata: dto.metadata as Prisma.InputJsonValue }),
       },
       include: {
         criteria: {
@@ -197,30 +194,30 @@ export class RubricsService {
     return { message: 'Rubric deleted successfully' };
   }
 
-  private toResponseDto(rubric: any): RubricResponseDto {
+  private toResponseDto(rubric: Record<string, unknown>): RubricResponseDto {
     return {
-      id: rubric.id,
-      name: rubric.name,
-      description: rubric.description,
-      totalPoints: rubric.totalPoints,
-      passingGrade: rubric.passingGrade,
-      metadata: rubric.metadata,
-      createdAt: rubric.createdAt,
-      updatedAt: rubric.updatedAt,
-      criteria: rubric.criteria?.map((c: any) => ({
-        id: c.id,
-        title: c.title,
-        maxPoints: c.maxPoints,
-        weight: c.weight,
-        evaluationMethod: c.evaluationMethod,
-        unitTestWeight: c.unitTestWeight,
-        gptWeight: c.gptWeight,
-        gptInstructions: c.gptInstructions,
-        filesToAnalyze: c.filesToAnalyze,
-        levels: c.levels,
-        order: c.order,
+      id: rubric.id as string,
+      name: rubric.name as string,
+      description: rubric.description as string | null,
+      totalPoints: rubric.totalPoints as number,
+      passingGrade: rubric.passingGrade as number,
+      metadata: rubric.metadata as Record<string, unknown>,
+      createdAt: rubric.createdAt as Date,
+      updatedAt: rubric.updatedAt as Date,
+      criteria: (rubric.criteria as Array<Record<string, unknown>>)?.map((c) => ({
+        id: c.id as string,
+        title: c.title as string,
+        maxPoints: c.maxPoints as number,
+        weight: c.weight as number,
+        evaluationMethod: c.evaluationMethod as string,
+        unitTestWeight: c.unitTestWeight as number,
+        gptWeight: c.gptWeight as number,
+        gptInstructions: c.gptInstructions as string,
+        filesToAnalyze: c.filesToAnalyze as string[],
+        levels: c.levels as Record<string, unknown>,
+        order: c.order as number,
       })),
-      assignment: rubric.assignment,
+      assignment: rubric.assignment as { id: string; title: string } | undefined,
     };
   }
 }

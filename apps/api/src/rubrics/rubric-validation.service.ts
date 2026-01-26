@@ -6,7 +6,7 @@ interface RubricJson {
     description?: string;
     totalPoints: number;
     passingGrade: number;
-    metadata?: any;
+    metadata?: Record<string, unknown>;
   };
   criteria: Array<{
     title: string;
@@ -17,14 +17,14 @@ interface RubricJson {
     gptWeight?: number;
     gptInstructions: string;
     filesToAnalyze?: string[];
-    levels: any;
+    levels: Record<string, unknown>;
     order?: number;
   }>;
 }
 
 @Injectable()
 export class RubricValidationService {
-  validateRubricJson(json: any): RubricJson {
+  validateRubricJson(json: Record<string, unknown>): RubricJson {
     // Check top-level structure
     if (!json.rubric || !json.criteria) {
       throw new BadRequestException(
@@ -33,21 +33,24 @@ export class RubricValidationService {
     }
 
     // Validate rubric object
-    this.validateRubricFormat(json.rubric);
+    this.validateRubricFormat(json.rubric as Record<string, unknown>);
 
     // Validate criteria array
-    this.validateCriteriaFormat(json.criteria);
+    this.validateCriteriaFormat(json.criteria as Record<string, unknown>[]);
 
     // Validate evaluation methods
-    this.validateEvaluationMethods(json.criteria);
+    this.validateEvaluationMethods(json.criteria as Record<string, unknown>[]);
 
     // Validate point totals
-    this.validatePointTotals(json.rubric.totalPoints, json.criteria);
+    this.validatePointTotals(
+      (json.rubric as { totalPoints: number }).totalPoints,
+      json.criteria as Array<{ maxPoints: number }>,
+    );
 
     return json as RubricJson;
   }
 
-  private validateRubricFormat(rubric: any): void {
+  private validateRubricFormat(rubric: Record<string, unknown>): void {
     if (!rubric.name || typeof rubric.name !== 'string') {
       throw new BadRequestException('Rubric must have a valid "name" string');
     }
@@ -65,7 +68,7 @@ export class RubricValidationService {
     }
   }
 
-  private validateCriteriaFormat(criteria: any[]): void {
+  private validateCriteriaFormat(criteria: Record<string, unknown>[]): void {
     if (!Array.isArray(criteria) || criteria.length === 0) {
       throw new BadRequestException('Criteria must be a non-empty array');
     }
@@ -101,7 +104,7 @@ export class RubricValidationService {
     });
   }
 
-  private validateEvaluationMethods(criteria: any[]): void {
+  private validateEvaluationMethods(criteria: Record<string, unknown>[]): void {
     const validMethods = ['unit_test', 'gpt_semantic', 'hybrid'];
 
     criteria.forEach((criterion) => {
@@ -125,7 +128,7 @@ export class RubricValidationService {
     });
   }
 
-  private validatePointTotals(totalPoints: number, criteria: any[]): void {
+  private validatePointTotals(totalPoints: number, criteria: Array<{ maxPoints: number }>): void {
     const sumOfMaxPoints = criteria.reduce((sum, criterion) => sum + criterion.maxPoints, 0);
 
     if (sumOfMaxPoints !== totalPoints) {

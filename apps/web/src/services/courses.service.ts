@@ -20,6 +20,19 @@ export interface Course {
   studentCount?: number;
 }
 
+export interface EnrolledStudent {
+  id: string;
+  enrolledAt: string;
+  student: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    githubUsername?: string;
+    avatarUrl?: string;
+  };
+}
+
 export interface CreateCourseDto {
   code: string;
   name: string;
@@ -30,6 +43,10 @@ export interface CreateCourseDto {
 
 export interface UpdateCourseDto extends Partial<CreateCourseDto> {
   isActive?: boolean;
+}
+
+export interface EnrollStudentsDto {
+  studentIds: string[];
 }
 
 export const coursesService = {
@@ -63,6 +80,31 @@ export const coursesService = {
     return response.data;
   },
 
+  // Enrollment methods
+  async getEnrolledStudents(courseId: string): Promise<EnrolledStudent[]> {
+    const response = await apiClient.get<EnrolledStudent[]>(`/courses/${courseId}/students`);
+    return response.data;
+  },
+
+  async enrollStudents(
+    courseId: string,
+    data: EnrollStudentsDto,
+  ): Promise<{ message: string; enrolledCount: number }> {
+    const response = await apiClient.post<{ message: string; enrolledCount: number }>(
+      `/courses/${courseId}/enrollments`,
+      data,
+    );
+    return response.data;
+  },
+
+  async removeStudent(courseId: string, studentId: string): Promise<{ message: string }> {
+    const response = await apiClient.delete<{ message: string }>(
+      `/courses/${courseId}/enrollments/${studentId}`,
+    );
+    return response.data;
+  },
+
+  // Deprecated - kept for backward compatibility
   async enroll(courseId: string): Promise<{ message: string }> {
     const response = await apiClient.post<{ message: string }>(`/courses/${courseId}/enrollments`);
     return response.data;

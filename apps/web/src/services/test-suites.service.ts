@@ -17,7 +17,7 @@ export interface TestSuite {
   description?: string;
   isTemplate: boolean;
   templateType?: 'JEST' | 'MOCHA' | 'PYTEST' | 'JUNIT';
-  parameters?: any;
+  parameters?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
   assignment?: {
@@ -34,7 +34,7 @@ export interface CreateTestSuiteDto {
   assignmentId: string;
   isTemplate?: boolean;
   templateType?: 'JEST' | 'MOCHA' | 'PYTEST' | 'JUNIT';
-  parameters?: any;
+  parameters?: Record<string, unknown>;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type

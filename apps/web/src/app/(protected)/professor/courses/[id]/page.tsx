@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LoadingPage, ErrorPage, EmptyState } from '@/components/shared';
 import { ArrowLeft, Edit, Users, FileText, Plus } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { EnrollmentManager } from '@/components/professor/enrollment-manager';
 
 export default function CourseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -135,18 +136,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ id: str
           </TabsContent>
 
           <TabsContent value="students" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Enrolled Students</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <EmptyState
-                  icon="inbox"
-                  title="No students enrolled"
-                  description="Students can enroll in this course from their dashboard."
-                />
-              </CardContent>
-            </Card>
+            <EnrollmentManager courseId={id} courseName={`${course.code} - ${course.name}`} />
           </TabsContent>
         </Tabs>
       </div>

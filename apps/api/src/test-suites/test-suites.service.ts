@@ -1,9 +1,6 @@
-import {
-  Injectable,
-  NotFoundException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 import {
   CreateTestSuiteDto,
   UpdateTestSuiteDto,
@@ -41,7 +38,7 @@ export class TestSuitesService {
         assignmentId: dto.assignmentId,
         isTemplate: dto.isTemplate || false,
         templateType: dto.templateType,
-        parameters: dto.parameters || {},
+        parameters: (dto.parameters || {}) as Prisma.InputJsonValue,
       },
       include: {
         assignment: {
@@ -171,7 +168,7 @@ export class TestSuitesService {
         ...(dto.description !== undefined && { description: dto.description }),
         ...(dto.isTemplate !== undefined && { isTemplate: dto.isTemplate }),
         ...(dto.templateType && { templateType: dto.templateType }),
-        ...(dto.parameters && { parameters: dto.parameters }),
+        ...(dto.parameters && { parameters: dto.parameters as Prisma.InputJsonValue }),
       },
       include: {
         assignment: {
@@ -339,32 +336,34 @@ export class TestSuitesService {
     return { message: 'Test file deleted successfully' };
   }
 
-  private toResponseDto(testSuite: any): TestSuiteResponseDto {
+  private toResponseDto(testSuite: Record<string, unknown>): TestSuiteResponseDto {
     return {
-      id: testSuite.id,
-      name: testSuite.name,
-      description: testSuite.description,
-      isTemplate: testSuite.isTemplate,
-      templateType: testSuite.templateType,
-      parameters: testSuite.parameters,
-      createdAt: testSuite.createdAt,
-      updatedAt: testSuite.updatedAt,
-      assignment: testSuite.assignment,
-      testFiles: testSuite.testFiles?.map((file: any) => this.toTestFileResponseDto(file)),
-      testFileCount: testSuite.testFileCount,
+      id: testSuite.id as string,
+      name: testSuite.name as string,
+      description: testSuite.description as string | null,
+      isTemplate: testSuite.isTemplate as boolean,
+      templateType: testSuite.templateType as string | null,
+      parameters: testSuite.parameters as Record<string, unknown>,
+      createdAt: testSuite.createdAt as Date,
+      updatedAt: testSuite.updatedAt as Date,
+      assignment: testSuite.assignment as { id: string; title: string } | undefined,
+      testFiles: (testSuite.testFiles as Array<Record<string, unknown>>)?.map((file) =>
+        this.toTestFileResponseDto(file),
+      ),
+      testFileCount: testSuite.testFileCount as number | undefined,
     };
   }
 
-  private toTestFileResponseDto(testFile: any): TestFileResponseDto {
+  private toTestFileResponseDto(testFile: Record<string, unknown>): TestFileResponseDto {
     return {
-      id: testFile.id,
-      fileName: testFile.fileName,
-      filePath: testFile.filePath,
-      content: testFile.content,
-      isGenerated: testFile.isGenerated,
-      createdAt: testFile.createdAt,
-      updatedAt: testFile.updatedAt,
-      criterionId: testFile.criterionId,
+      id: testFile.id as string,
+      fileName: testFile.fileName as string,
+      filePath: testFile.filePath as string,
+      content: testFile.content as string,
+      isGenerated: testFile.isGenerated as boolean,
+      createdAt: testFile.createdAt as Date,
+      updatedAt: testFile.updatedAt as Date,
+      criterionId: testFile.criterionId as string | null,
     };
   }
 }

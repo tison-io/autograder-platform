@@ -348,21 +348,21 @@ export class AssignmentsService {
     return { message: 'Assignment deleted successfully' };
   }
 
-  private toResponseDto(assignment: any): AssignmentResponseDto {
+  private toResponseDto(assignment: Record<string, unknown>): AssignmentResponseDto {
     return {
-      id: assignment.id,
-      title: assignment.title,
-      description: assignment.description,
-      dueDate: assignment.dueDate,
-      maxSubmissions: assignment.maxSubmissions,
-      allowLateSubmissions: assignment.allowLateSubmissions,
-      isPublished: assignment.isPublished,
-      createdAt: assignment.createdAt,
-      updatedAt: assignment.updatedAt,
-      course: assignment.course,
-      rubric: assignment.rubric,
-      submissionCount: assignment.submissionCount,
-      studentCount: assignment.studentCount,
+      id: assignment.id as string,
+      title: assignment.title as string,
+      description: assignment.description as string | null,
+      dueDate: assignment.dueDate as Date,
+      maxSubmissions: assignment.maxSubmissions as number,
+      allowLateSubmissions: assignment.allowLateSubmissions as boolean,
+      isPublished: assignment.isPublished as boolean,
+      createdAt: assignment.createdAt as Date,
+      updatedAt: assignment.updatedAt as Date,
+      course: assignment.course as { id: string; name: string } | undefined,
+      rubric: assignment.rubric as { id: string; name: string } | undefined,
+      submissionCount: assignment.submissionCount as number | undefined,
+      studentCount: assignment.studentCount as number | undefined,
     };
   }
 }

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { authService, LoginCredentials, RegisterData } from '@/services';
 import { useAuthStore } from '@/stores/auth-store';
 import { useRouter } from 'next/navigation';
+import { showToast } from './use-toast';
 
 export function useLogin() {
   const { setAuth } = useAuthStore();
@@ -11,6 +12,7 @@ export function useLogin() {
     mutationFn: (credentials: LoginCredentials) => authService.login(credentials),
     onSuccess: (data) => {
       setAuth(data.user, data.accessToken, data.refreshToken, data.expiresIn);
+      showToast.success('Welcome back!', `Logged in as ${data.user.firstName}`);
 
       // Redirect based on role
       if (data.user.role === 'PROFESSOR') {
@@ -20,6 +22,9 @@ export function useLogin() {
       } else {
         router.push('/dashboard');
       }
+    },
+    onError: (error: Error) => {
+      showToast.error('Login failed', error.message || 'Invalid email or password');
     },
   });
 }
@@ -32,6 +37,7 @@ export function useRegister() {
     mutationFn: (data: RegisterData) => authService.register(data),
     onSuccess: (data) => {
       setAuth(data.user, data.accessToken, data.refreshToken, data.expiresIn);
+      showToast.success('Account created!', `Welcome to AutoGrader, ${data.user.firstName}`);
 
       // Redirect based on role
       if (data.user.role === 'PROFESSOR') {
@@ -41,6 +47,9 @@ export function useRegister() {
       } else {
         router.push('/dashboard');
       }
+    },
+    onError: (error: Error) => {
+      showToast.error('Registration failed', error.message || 'Could not create account');
     },
   });
 }
@@ -64,6 +73,7 @@ export function useLogout() {
   return () => {
     logout();
     queryClient.clear();
+    showToast.info('Logged out', 'You have been signed out successfully');
     router.push('/login');
   };
 }
@@ -83,6 +93,7 @@ export function useRefreshToken() {
     },
     onError: () => {
       logout();
+      showToast.warning('Session expired', 'Please log in again');
     },
   });
 }

@@ -2,18 +2,55 @@
 
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/auth-store';
-import { useMyCourses } from '@/hooks';
+import { useStudentStats, useUpcomingDeadlines } from '@/hooks';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/shared';
-import { BookOpen, FileText, TrendingUp, Clock, Search } from 'lucide-react';
+import {
+  BookOpen,
+  FileText,
+  TrendingUp,
+  Clock,
+  Search,
+  AlertCircle,
+  CheckCircle,
+  AlertTriangle,
+} from 'lucide-react';
+import { format } from 'date-fns';
 
 export default function StudentDashboard() {
   const { user } = useAuthStore();
-  const { data: courses, isLoading } = useMyCourses();
+  const { data: stats, isLoading: statsLoading, error: statsError } = useStudentStats();
+  const { data: upcomingData, isLoading: deadlinesLoading } = useUpcomingDeadlines(5);
 
-  const courseCount = courses?.length || 0;
-  const totalAssignments = courses?.reduce((sum, c) => sum + (c.assignmentCount || 0), 0) || 0;
+  const getDeadlineBadge = (daysRemaining: number, hasSubmitted: boolean) => {
+    if (hasSubmitted) {
+      return (
+        <Badge variant="default" className="bg-green-500">
+          <CheckCircle className="h-3 w-3 mr-1" /> Submitted
+        </Badge>
+      );
+    }
+    if (daysRemaining < 0) {
+      return (
+        <Badge variant="destructive">
+          <AlertTriangle className="h-3 w-3 mr-1" /> Overdue
+        </Badge>
+      );
+    }
+    if (daysRemaining <= 1) {
+      return <Badge variant="destructive">Due Today</Badge>;
+    }
+    if (daysRemaining <= 3) {
+      return (
+        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+          {daysRemaining} days left
+        </Badge>
+      );
+    }
+    return <Badge variant="outline">{daysRemaining} days left</Badge>;
+  };
 
   return (
     <div className="p-8">
@@ -25,6 +62,15 @@ export default function StudentDashboard() {
           </p>
         </div>
 
+        {statsError && (
+          <Card className="border-red-200 bg-red-50">
+            <CardContent className="p-4 flex items-center gap-2 text-red-700">
+              <AlertCircle className="h-5 w-5" />
+              <span>Failed to load dashboard statistics. Please try again later.</span>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="pb-3">
@@ -34,12 +80,12 @@ export default function StudentDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {isLoading ? (
+              {statsLoading ? (
                 <LoadingSpinner size="sm" />
               ) : (
                 <>
-                  <p className="text-3xl font-bold">{courseCount}</p>
-                  <p className="text-sm text-gray-600 mt-1">This semester</p>
+                  <p className="text-3xl font-bold">{stats?.activeCourses ?? 0}</p>
+                  <p className="text-sm text-gray-600 mt-1">{stats?.totalCourses ?? 0} total</p>
                 </>
               )}
             </CardContent>
@@ -53,12 +99,14 @@ export default function StudentDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {isLoading ? (
+              {statsLoading ? (
                 <LoadingSpinner size="sm" />
               ) : (
                 <>
-                  <p className="text-3xl font-bold">{totalAssignments}</p>
-                  <p className="text-sm text-gray-600 mt-1">Total available</p>
+                  <p className="text-3xl font-bold">{stats?.completedAssignments ?? 0}</p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    of {stats?.totalAssignments ?? 0} completed
+                  </p>
                 </>
               )}
             </CardContent>
@@ -72,8 +120,18 @@ export default function StudentDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">0</p>
-              <p className="text-sm text-gray-600 mt-1">Next 7 days</p>
+              {statsLoading ? (
+                <LoadingSpinner size="sm" />
+              ) : (
+                <>
+                  <p className="text-3xl font-bold">{stats?.dueSoon ?? 0}</p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {stats?.overdueAssignments
+                      ? `${stats.overdueAssignments} overdue`
+                      : 'Next 7 days'}
+                  </p>
+                </>
+              )}
             </CardContent>
           </Card>
 
@@ -85,8 +143,22 @@ export default function StudentDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">--</p>
-              <p className="text-sm text-gray-600 mt-1">No grades yet</p>
+              {statsLoading ? (
+                <LoadingSpinner size="sm" />
+              ) : (
+                <>
+                  <p className="text-3xl font-bold">
+                    {stats?.averageGrade !== null && stats?.averageGrade !== undefined
+                      ? `${stats.averageGrade}%`
+                      : '--'}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {stats?.totalSubmissions
+                      ? `${stats.totalSubmissions} submissions`
+                      : 'No grades yet'}
+                  </p>
+                </>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -125,31 +197,95 @@ export default function StudentDashboard() {
               <CardDescription>Assignments due soon</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600">
-                No upcoming deadlines. Enroll in courses to see assignments.
-              </p>
+              {deadlinesLoading ? (
+                <LoadingSpinner size="sm" />
+              ) : upcomingData?.deadlines && upcomingData.deadlines.length > 0 ? (
+                <div className="space-y-3">
+                  {upcomingData.deadlines.map((deadline) => (
+                    <div
+                      key={deadline.assignmentId}
+                      className="flex items-center justify-between py-2 border-b last:border-0"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate">{deadline.title}</p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {deadline.courseCode} • Due{' '}
+                          {format(new Date(deadline.dueDate), 'MMM d, h:mm a')}
+                        </p>
+                      </div>
+                      <div className="ml-2">
+                        {getDeadlineBadge(deadline.daysRemaining, deadline.hasSubmitted)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-600">
+                  No upcoming deadlines. Enroll in courses to see assignments.
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>✅ Phase 8 Complete: Student Dashboard</CardTitle>
-            <CardDescription>Full student interface</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
-              <li>View enrolled courses</li>
-              <li>Browse and enroll in available courses</li>
-              <li>View assignments and deadlines</li>
-              <li>Track grades and progress</li>
-              <li>Quick action navigation</li>
-            </ul>
-            <p className="text-sm text-gray-600 pt-4 border-t">
-              <strong>Next:</strong> Phase 9 - Testing & Integration
-            </p>
-          </CardContent>
-        </Card>
+        {/* Course Progress */}
+        {stats?.courseStats && stats.courseStats.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Course Progress</CardTitle>
+              <CardDescription>Your performance across enrolled courses</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-3 px-2 font-medium">Course</th>
+                      <th className="text-left py-3 px-2 font-medium">Professor</th>
+                      <th className="text-center py-3 px-2 font-medium">Completed</th>
+                      <th className="text-center py-3 px-2 font-medium">Average</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stats.courseStats.map((course) => (
+                      <tr key={course.id} className="border-b hover:bg-gray-50">
+                        <td className="py-3 px-2">
+                          <Link href={`/student/courses/${course.id}`} className="hover:underline">
+                            <div className="font-medium">{course.code}</div>
+                            <div className="text-gray-500 text-xs">{course.name}</div>
+                          </Link>
+                        </td>
+                        <td className="py-3 px-2 text-gray-600">{course.professorName}</td>
+                        <td className="text-center py-3 px-2">
+                          <span className="font-medium">{course.completedAssignments}</span>
+                          <span className="text-gray-400">/{course.totalAssignments}</span>
+                        </td>
+                        <td className="text-center py-3 px-2">
+                          {course.averageGrade !== null ? (
+                            <Badge
+                              variant={course.averageGrade >= 70 ? 'default' : 'destructive'}
+                              className={
+                                course.averageGrade >= 90
+                                  ? 'bg-green-500'
+                                  : course.averageGrade >= 70
+                                    ? 'bg-blue-500'
+                                    : ''
+                              }
+                            >
+                              {course.averageGrade}%
+                            </Badge>
+                          ) : (
+                            <span className="text-gray-400">--</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

@@ -120,8 +120,9 @@ export default function AdminUsersPage() {
     try {
       const data = await usersService.getAllUsers();
       setUsers(data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load users');
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to load users');
     } finally {
       setIsLoading(false);
     }
@@ -202,8 +203,9 @@ export default function AdminUsersPage() {
       setSuccessMessage(`User ${editData.firstName} ${editData.lastName} updated successfully`);
       setEditingUser(null);
       fetchUsers();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to update user');
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to update user');
     } finally {
       setIsSaving(false);
     }
@@ -235,8 +237,9 @@ export default function AdminUsersPage() {
         githubUsername: '',
       });
       fetchUsers();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to create user');
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to create user');
     } finally {
       setIsCreating(false);
     }
@@ -256,8 +259,9 @@ export default function AdminUsersPage() {
       );
       setDeletingUser(null);
       fetchUsers();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to delete user');
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to delete user');
     } finally {
       setIsDeleting(false);
     }

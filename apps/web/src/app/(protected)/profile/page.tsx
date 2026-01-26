@@ -117,7 +117,8 @@ export default function ProfilePage() {
 
       setSuccessMessage('Profile updated successfully!');
       setIsEditing(false);
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
       setErrorMessage(error.response?.data?.message || 'Failed to update profile');
     } finally {
       setIsSaving(false);
@@ -138,7 +139,8 @@ export default function ProfilePage() {
       });
 
       setSuccessMessage('Avatar updated successfully!');
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
       throw new Error(error.response?.data?.message || 'Failed to upload avatar');
     }
   };
@@ -157,7 +159,8 @@ export default function ProfilePage() {
       });
 
       setSuccessMessage('Avatar removed successfully!');
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
       throw new Error(error.response?.data?.message || 'Failed to remove avatar');
     }
   };

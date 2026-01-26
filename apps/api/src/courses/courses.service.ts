@@ -228,16 +228,89 @@ export class CoursesService {
     };
   }
 
-  private toResponseDto(course: any): CourseResponseDto {
+  async getEnrolledStudents(courseId: string, professorId: string) {
+    const course = await this.prisma.course.findUnique({
+      where: { id: courseId },
+    });
+
+    if (!course) {
+      throw new NotFoundException(`Course with ID ${courseId} not found`);
+    }
+
+    // Verify user is the professor of this course
+    if (course.professorId !== professorId) {
+      throw new ForbiddenException('You are not authorized to view students in this course');
+    }
+
+    const enrollments = await this.prisma.enrollment.findMany({
+      where: { courseId },
+      include: {
+        student: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            githubUsername: true,
+            avatarUrl: true,
+          },
+        },
+      },
+      orderBy: {
+        enrolledAt: 'desc',
+      },
+    });
+
+    return enrollments.map((enrollment) => ({
+      id: enrollment.id,
+      enrolledAt: enrollment.enrolledAt,
+      student: enrollment.student,
+    }));
+  }
+
+  async removeStudent(courseId: string, studentId: string, professorId: string) {
+    const course = await this.prisma.course.findUnique({
+      where: { id: courseId },
+    });
+
+    if (!course) {
+      throw new NotFoundException(`Course with ID ${courseId} not found`);
+    }
+
+    // Verify user is the professor of this course
+    if (course.professorId !== professorId) {
+      throw new ForbiddenException('You are not authorized to remove students from this course');
+    }
+
+    // Find the enrollment
+    const enrollment = await this.prisma.enrollment.findFirst({
+      where: {
+        courseId,
+        studentId,
+      },
+    });
+
+    if (!enrollment) {
+      throw new NotFoundException('Student is not enrolled in this course');
+    }
+
+    await this.prisma.enrollment.delete({
+      where: { id: enrollment.id },
+    });
+
+    return { message: 'Student removed from course successfully' };
+  }
+
+  private toResponseDto(course: Record<string, unknown>): CourseResponseDto {
     return {
-      id: course.id,
-      name: course.name,
-      code: course.code,
-      description: course.description,
-      semester: course.semester,
-      year: course.year,
-      isActive: course.isActive,
-      professorId: course.professorId,
+      id: course.id as string,
+      name: course.name as string,
+      code: course.code as string,
+      description: course.description as string | null,
+      semester: course.semester as string,
+      year: course.year as number,
+      isActive: course.isActive as boolean,
+      professorId: course.professorId as string,
       professor: course.professor,
       createdAt: course.createdAt,
       updatedAt: course.updatedAt,

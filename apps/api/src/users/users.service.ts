@@ -72,7 +72,7 @@ export class UsersService {
     await this.findOne(id);
 
     // Prepare update data
-    const updateData: any = {
+    const updateData: Record<string, string | undefined> = {
       email: updateUserDto.email,
       firstName: updateUserDto.firstName,
       lastName: updateUserDto.lastName,
@@ -125,7 +125,17 @@ export class UsersService {
     return this.toResponseDto(user);
   }
 
-  private toResponseDto(user: any): UserResponseDto {
+  private toResponseDto(user: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+    githubUsername: string | null;
+    avatarUrl: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+  }): UserResponseDto {
     return {
       id: user.id,
       email: user.email,
