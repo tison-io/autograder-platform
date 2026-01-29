@@ -340,9 +340,9 @@ export class TestSuitesService {
     return {
       id: testSuite.id as string,
       name: testSuite.name as string,
-      description: testSuite.description as string | null,
+      description: (testSuite.description as string | null) ?? undefined,
       isTemplate: testSuite.isTemplate as boolean,
-      templateType: testSuite.templateType as string | null,
+      templateType: (testSuite.templateType as string | null) ?? undefined,
       parameters: testSuite.parameters as Record<string, unknown>,
       createdAt: testSuite.createdAt as Date,
       updatedAt: testSuite.updatedAt as Date,
@@ -363,7 +363,7 @@ export class TestSuitesService {
       isGenerated: testFile.isGenerated as boolean,
       createdAt: testFile.createdAt as Date,
       updatedAt: testFile.updatedAt as Date,
-      criterionId: testFile.criterionId as string | null,
+      criterionId: (testFile.criterionId as string | null) ?? undefined,
     };
   }
 }

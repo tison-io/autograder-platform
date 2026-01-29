@@ -11,7 +11,7 @@ import { AssignmentsModule } from './assignments/assignments.module';
 import { RubricsModule } from './rubrics/rubrics.module';
 import { TestSuitesModule } from './test-suites/test-suites.module';
 import { DashboardModule } from './dashboard/dashboard.module';
-// import { SubmissionsModule } from './submissions/submissions.module';
+import { SubmissionsModule } from './submissions/submissions.module';
 // import { GradingModule } from './grading/grading.module';
 // import { WebsocketsModule } from './websockets/websockets.module';
 
@@ -30,8 +30,8 @@ import { DashboardModule } from './dashboard/dashboard.module';
     RubricsModule,
     TestSuitesModule,
     DashboardModule,
+    SubmissionsModule,
     // TODO: Implement these modules to match Prisma schema
-    // SubmissionsModule,
     // GradingModule,
     // WebsocketsModule,
   ],

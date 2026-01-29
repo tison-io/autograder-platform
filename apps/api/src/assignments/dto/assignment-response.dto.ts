@@ -29,8 +29,8 @@ export class AssignmentResponseDto {
   @ApiProperty({ description: 'Assignment title', example: 'Homework 1 - Data Structures' })
   title: string;
 
-  @ApiProperty({ description: 'Assignment description' })
-  description: string;
+  @ApiPropertyOptional({ description: 'Assignment description' })
+  description?: string;
 
   @ApiProperty({ description: 'Due date' })
   dueDate: Date;

@@ -349,18 +349,24 @@ export class AssignmentsService {
   }
 
   private toResponseDto(assignment: Record<string, unknown>): AssignmentResponseDto {
+    const course = assignment.course as { id: string; name: string; code: string } | undefined;
+    const rubric = assignment.rubric as
+      | { id: string; name: string; totalPoints: number }
+      | undefined;
     return {
       id: assignment.id as string,
       title: assignment.title as string,
-      description: assignment.description as string | null,
+      description: (assignment.description as string | null) ?? undefined,
       dueDate: assignment.dueDate as Date,
       maxSubmissions: assignment.maxSubmissions as number,
       allowLateSubmissions: assignment.allowLateSubmissions as boolean,
       isPublished: assignment.isPublished as boolean,
       createdAt: assignment.createdAt as Date,
       updatedAt: assignment.updatedAt as Date,
-      course: assignment.course as { id: string; name: string } | undefined,
-      rubric: assignment.rubric as { id: string; name: string } | undefined,
+      course: course ? { id: course.id, name: course.name, code: course.code } : undefined,
+      rubric: rubric
+        ? { id: rubric.id, name: rubric.name, totalPoints: rubric.totalPoints }
+        : undefined,
       submissionCount: assignment.submissionCount as number | undefined,
       studentCount: assignment.studentCount as number | undefined,
     };

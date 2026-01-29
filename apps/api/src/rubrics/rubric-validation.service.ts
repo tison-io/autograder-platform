@@ -47,7 +47,7 @@ export class RubricValidationService {
       json.criteria as Array<{ maxPoints: number }>,
     );
 
-    return json as RubricJson;
+    return json as unknown as RubricJson;
   }
 
   private validateRubricFormat(rubric: Record<string, unknown>): void {
@@ -108,16 +108,17 @@ export class RubricValidationService {
     const validMethods = ['unit_test', 'gpt_semantic', 'hybrid'];
 
     criteria.forEach((criterion) => {
-      if (!validMethods.includes(criterion.evaluationMethod)) {
+      const evalMethod = criterion.evaluationMethod as string;
+      if (!validMethods.includes(evalMethod)) {
         throw new BadRequestException(
           `Criterion "${criterion.title}" has invalid evaluationMethod. Must be one of: ${validMethods.join(', ')}`,
         );
       }
 
       // Validate weights for hybrid method
-      if (criterion.evaluationMethod === 'hybrid') {
-        const unitTestWeight = criterion.unitTestWeight ?? 0;
-        const gptWeight = criterion.gptWeight ?? 0;
+      if (evalMethod === 'hybrid') {
+        const unitTestWeight = (criterion.unitTestWeight as number) ?? 0;
+        const gptWeight = (criterion.gptWeight as number) ?? 0;
 
         if (unitTestWeight + gptWeight !== 1.0) {
           throw new BadRequestException(

@@ -311,9 +311,11 @@ export class CoursesService {
       year: course.year as number,
       isActive: course.isActive as boolean,
       professorId: course.professorId as string,
-      professor: course.professor,
-      createdAt: course.createdAt,
-      updatedAt: course.updatedAt,
+      professor: course.professor as
+        | { id: string; email: string; firstName: string; lastName: string }
+        | undefined,
+      createdAt: course.createdAt as Date,
+      updatedAt: course.updatedAt as Date,
     };
   }
 }

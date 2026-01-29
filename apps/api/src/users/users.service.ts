@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { CreateUserDto, UpdateUserDto, UserResponseDto } from './dto';
+import { UserRole } from '@autograder/database';
 import * as bcrypt from 'bcryptjs';
 
 @Injectable()
@@ -130,7 +131,7 @@ export class UsersService {
     email: string;
     firstName: string;
     lastName: string;
-    role: string;
+    role: UserRole;
     githubUsername: string | null;
     avatarUrl: string | null;
     createdAt: Date;

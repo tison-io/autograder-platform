@@ -1,7 +1,12 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
-import { CreateRubricWithCriteriaDto, UpdateRubricDto, RubricResponseDto } from './dto';
+import {
+  CreateRubricWithCriteriaDto,
+  UpdateRubricDto,
+  RubricResponseDto,
+  CreateCriterionDto,
+} from './dto';
 import { RubricValidationService } from './rubric-validation.service';
 
 @Injectable()
@@ -65,14 +70,17 @@ export class RubricsService {
       });
     });
 
-    return this.toResponseDto(rubric);
+    if (!rubric) {
+      throw new NotFoundException('Rubric not found');
+    }
+    return this.toResponseDto(rubric as unknown as Record<string, unknown>);
   }
 
   async uploadFromJson(jsonContent: string): Promise<RubricResponseDto> {
     // Parse JSON
-    let parsedJson: unknown;
+    let parsedJson: Record<string, unknown>;
     try {
-      parsedJson = JSON.parse(jsonContent);
+      parsedJson = JSON.parse(jsonContent) as Record<string, unknown>;
     } catch {
       throw new BadRequestException('Invalid JSON format');
     }
@@ -83,7 +91,7 @@ export class RubricsService {
     // Create rubric with criteria
     return this.create({
       rubric: validatedJson.rubric,
-      criteria: validatedJson.criteria,
+      criteria: validatedJson.criteria as unknown as CreateCriterionDto[],
     });
   }
 
@@ -198,7 +206,7 @@ export class RubricsService {
     return {
       id: rubric.id as string,
       name: rubric.name as string,
-      description: rubric.description as string | null,
+      description: (rubric.description as string | null) ?? undefined,
       totalPoints: rubric.totalPoints as number,
       passingGrade: rubric.passingGrade as number,
       metadata: rubric.metadata as Record<string, unknown>,
@@ -214,7 +222,7 @@ export class RubricsService {
         gptWeight: c.gptWeight as number,
         gptInstructions: c.gptInstructions as string,
         filesToAnalyze: c.filesToAnalyze as string[],
-        levels: c.levels as Record<string, unknown>,
+        levels: c.levels as Record<string, string>,
         order: c.order as number,
       })),
       assignment: rubric.assignment as { id: string; title: string } | undefined,
