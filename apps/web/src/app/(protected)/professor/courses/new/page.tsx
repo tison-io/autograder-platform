@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -25,6 +26,7 @@ interface FormData {
   description: string;
   semester: string;
   year: number;
+  isActive: boolean;
 }
 
 export default function NewCoursePage() {
@@ -36,6 +38,7 @@ export default function NewCoursePage() {
     description: '',
     semester: 'Fall',
     year: new Date().getFullYear(),
+    isActive: true,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -149,6 +152,19 @@ export default function NewCoursePage() {
                   onChange={handleChange('description')}
                   rows={4}
                 />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="isActive"
+                  checked={formData.isActive}
+                  onCheckedChange={(checked) =>
+                    setFormData((prev) => ({ ...prev, isActive: checked === true }))
+                  }
+                />
+                <Label htmlFor="isActive" className="text-sm font-normal cursor-pointer">
+                  Active (students can see and enroll in this course)
+                </Label>
               </div>
 
               <div className="flex gap-4 pt-4">

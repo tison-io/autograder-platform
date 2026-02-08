@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
+import Papa from 'papaparse';
 import { useEnrolledStudents, useEnrollStudents, useRemoveStudent } from '@/hooks/use-courses';
 import { usersService } from '@/services';
 import { Button } from '@/components/ui/button';
@@ -35,7 +36,17 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { UserPlus, Trash2, Search, Users, Mail, Github, Loader2 } from 'lucide-react';
+import {
+  UserPlus,
+  Trash2,
+  Search,
+  Users,
+  Mail,
+  Github,
+  Loader2,
+  Upload,
+  FileText,
+} from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 
 interface EnrollmentManagerProps {
@@ -57,6 +68,10 @@ export function EnrollmentManager({ courseId, courseName }: EnrollmentManagerPro
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [availableStudents, setAvailableStudents] = useState<StudentToEnroll[]>([]);
   const [isLoadingStudents, setIsLoadingStudents] = useState(false);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [csvEmails, setCsvEmails] = useState<string[]>([]);
+  const [csvError, setCsvError] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: enrolledStudents, isLoading, error, refetch } = useEnrolledStudents(courseId);
   const enrollMutation = useEnrollStudents();
@@ -133,6 +148,87 @@ export function EnrollmentManager({ courseId, courseName }: EnrollmentManagerPro
     }
   };
 
+  const handleCsvUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setCsvFile(file);
+    setCsvError('');
+
+    Papa.parse(file, {
+      complete: (results) => {
+        try {
+          // Expect CSV with email column
+          const emails: string[] = [];
+          const data = results.data as any[];
+
+          // Check if header row exists with 'email' column
+          const hasEmailColumn = data[0]?.email || data[0]?.Email;
+
+          if (hasEmailColumn) {
+            // CSV has headers
+            for (let i = 1; i < data.length; i++) {
+              const row = data[i];
+              const email = row.email || row.Email;
+              if (email && typeof email === 'string' && email.trim()) {
+                emails.push(email.trim().toLowerCase());
+              }
+            }
+          } else {
+            // No headers, assume first column is email
+            data.forEach((row: any) => {
+              if (Array.isArray(row) && row[0]) {
+                emails.push(row[0].toString().trim().toLowerCase());
+              } else if (row && typeof row === 'object') {
+                const firstValue = Object.values(row)[0];
+                if (firstValue && typeof firstValue === 'string' && firstValue.trim()) {
+                  emails.push(firstValue.trim().toLowerCase());
+                }
+              }
+            });
+          }
+
+          if (emails.length === 0) {
+            setCsvError('No valid emails found in CSV file');
+            return;
+          }
+
+          setCsvEmails(emails);
+
+          // Auto-select students matching the CSV emails
+          const matchingIds = availableStudents
+            .filter((s) => emails.includes(s.email.toLowerCase()))
+            .map((s) => s.id);
+
+          setSelectedStudents(matchingIds);
+
+          if (matchingIds.length === 0) {
+            setCsvError('No matching students found for the provided emails');
+          } else if (matchingIds.length < emails.length) {
+            setCsvError(
+              `Only ${matchingIds.length} of ${emails.length} emails matched existing students`,
+            );
+          }
+        } catch (error) {
+          setCsvError('Failed to parse CSV file. Please check the format.');
+        }
+      },
+      error: () => {
+        setCsvError('Failed to read CSV file');
+      },
+      header: false,
+    });
+  };
+
+  const clearCsvImport = () => {
+    setCsvFile(null);
+    setCsvEmails([]);
+    setCsvError('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   if (isLoading) {
     return (
       <Card>
@@ -187,6 +283,7 @@ export function EnrollmentManager({ courseId, courseName }: EnrollmentManagerPro
               if (open) {
                 loadAvailableStudents();
                 setSelectedStudents([]);
+                clearCsvImport();
               }
             }}
           >
@@ -200,8 +297,7 @@ export function EnrollmentManager({ courseId, courseName }: EnrollmentManagerPro
               <DialogHeader>
                 <DialogTitle>Enroll Students in {courseName}</DialogTitle>
                 <DialogDescription>
-                  Select students to enroll in this course. Only students not already enrolled are
-                  shown.
+                  Select students manually or upload a CSV file with student emails.
                 </DialogDescription>
               </DialogHeader>
 
@@ -216,6 +312,54 @@ export function EnrollmentManager({ courseId, courseName }: EnrollmentManagerPro
                 </div>
               ) : (
                 <div className="space-y-4">
+                  {/* CSV Import Section */}
+                  <div className="border rounded-lg p-4 bg-gray-50">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-5 w-5 text-primary" />
+                        <h3 className="font-medium">Import from CSV</h3>
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-3">
+                      Upload a CSV file with student emails. File should have an "email" column or
+                      emails in the first column.
+                    </p>
+                    <div className="flex gap-2">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".csv"
+                        onChange={handleCsvUpload}
+                        className="hidden"
+                        id="csv-upload"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <Upload className="mr-2 h-4 w-4" />
+                        {csvFile ? 'Change File' : 'Upload CSV'}
+                      </Button>
+                      {csvFile && (
+                        <Button type="button" variant="ghost" size="sm" onClick={clearCsvImport}>
+                          Clear
+                        </Button>
+                      )}
+                    </div>
+                    {csvFile && (
+                      <div className="mt-2 text-sm">
+                        <span className="text-green-600">✓ {csvFile.name}</span>
+                        <span className="text-gray-500 ml-2">
+                          ({csvEmails.length} email{csvEmails.length !== 1 ? 's' : ''} found)
+                        </span>
+                      </div>
+                    )}
+                    {csvError && <div className="mt-2 text-sm text-amber-600">⚠ {csvError}</div>}
+                  </div>
+
+                  {/* Manual Selection Section */}
                   <div className="flex items-center gap-2 border-b pb-2">
                     <Checkbox
                       checked={selectedStudents.length === availableStudents.length}

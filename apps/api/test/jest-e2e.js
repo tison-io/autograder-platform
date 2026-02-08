@@ -10,7 +10,7 @@ module.exports = {
   },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/../src/$1',
-    '^@autograder/database$': '<rootDir>/../../packages/database/src',
+    '^@autograder/database$': '<rootDir>/../../packages/database/src/index',
   },
   setupFilesAfterEnv: ['<rootDir>/setup-e2e.ts'],
   testTimeout: 60000,
