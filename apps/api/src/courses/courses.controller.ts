@@ -47,6 +47,16 @@ export class CoursesController {
     return this.coursesService.findByProfessor(user.id);
   }
 
+  @Get('enrolled')
+  @Roles(UserRole.STUDENT)
+  @ApiOperation({ summary: 'Get courses enrolled by current student' })
+  @ApiResponse({ status: 200, description: 'Enrolled courses', type: [CourseResponseDto] })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Student only' })
+  findEnrolledCourses(@CurrentUser() user: UserResponseDto): Promise<CourseResponseDto[]> {
+    return this.coursesService.findEnrolledByStudent(user.id);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get course by ID' })
   @ApiParam({ name: 'id', description: 'Course ID' })

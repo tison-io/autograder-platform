@@ -9,6 +9,7 @@ import { LoadingPage, ErrorPage, EmptyState } from '@/components/shared';
 import { ArrowLeft, Edit, Users, FileText, Plus } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EnrollmentManager } from '@/components/professor/enrollment-manager';
+import { EnrollmentRequestsManager } from '@/components/professor/enrollment-requests-manager';
 
 export default function CourseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -94,6 +95,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ id: str
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="assignments">Assignments</TabsTrigger>
             <TabsTrigger value="students">Students</TabsTrigger>
+            <TabsTrigger value="requests">Enrollment Requests</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4">
@@ -137,6 +139,10 @@ export default function CourseDetailPage({ params }: { params: Promise<{ id: str
 
           <TabsContent value="students" className="space-y-4">
             <EnrollmentManager courseId={id} courseName={`${course.code} - ${course.name}`} />
+          </TabsContent>
+
+          <TabsContent value="requests" className="space-y-4">
+            <EnrollmentRequestsManager courseId={id} />
           </TabsContent>
         </Tabs>
       </div>

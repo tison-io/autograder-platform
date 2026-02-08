@@ -41,6 +41,12 @@ enum TestTemplateType {
   CUSTOM
 }
 
+enum EnrollmentRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 // ============================================
 // USER & AUTHENTICATION
 // ============================================
@@ -60,6 +66,7 @@ model User {
   // Relations
   coursesTeaching Course[] @relation("ProfessorCourses")
   enrollments     Enrollment[]
+  enrollmentRequests EnrollmentRequest[] @relation("StudentEnrollmentRequests")
   submissions     Submission[]
   passwordResetTokens PasswordResetToken[]
   
@@ -102,6 +109,7 @@ model Course {
   professor   User      @relation("ProfessorCourses", fields: [professorId], references: [id])
   assignments Assignment[]
   enrollments Enrollment[]
+  enrollmentRequests EnrollmentRequest[] @relation("CourseEnrollmentRequests")
   
   @@index([professorId])
   @@index([code])
@@ -120,6 +128,25 @@ model Enrollment {
   @@unique([studentId, courseId])
   @@index([studentId])
   @@index([courseId])
+}
+
+model EnrollmentRequest {
+  id        String                   @id @default(cuid())
+  status    EnrollmentRequestStatus  @default(PENDING)
+  message   String?                  // Optional message from student
+  createdAt DateTime                 @default(now())
+  updatedAt DateTime                 @updatedAt
+  
+  // Relations
+  studentId String
+  student   User   @relation("StudentEnrollmentRequests", fields: [studentId], references: [id], onDelete: Cascade)
+  courseId  String
+  course    Course @relation("CourseEnrollmentRequests", fields: [courseId], references: [id], onDelete: Cascade)
+  
+  @@unique([studentId, courseId])
+  @@index([studentId])
+  @@index([courseId])
+  @@index([status])
 }
 
 // ============================================

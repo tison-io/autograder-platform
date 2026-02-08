@@ -1,17 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { useCourses, useEnrollCourse } from '@/hooks';
+import { useCourses, useCreateEnrollmentRequest } from '@/hooks';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { LoadingCard, ErrorCard } from '@/components/shared';
-import { BookOpen, Users, FileText, CheckCircle, Search, Calendar } from 'lucide-react';
+import { BookOpen, Users, FileText, Send, Search, Calendar } from 'lucide-react';
 import Link from 'next/link';
 
 export default function BrowseCoursesPage() {
   const { data: courses, isLoading, error, refetch } = useCourses();
-  const enrollMutation = useEnrollCourse();
+  const enrollMutation = useCreateEnrollmentRequest();
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredCourses = courses?.filter(
@@ -21,9 +21,9 @@ export default function BrowseCoursesPage() {
         course.name.toLowerCase().includes(searchQuery.toLowerCase())),
   );
 
-  const handleEnroll = async (courseId: string) => {
+  const handleRequestEnrollment = async (courseId: string) => {
     try {
-      await enrollMutation.mutateAsync(courseId);
+      await enrollMutation.mutateAsync({ courseId, data: {} });
     } catch (_error) {
       // Error handled by mutation
     }
@@ -100,17 +100,17 @@ export default function BrowseCoursesPage() {
                 </div>
 
                 <Button
-                  onClick={() => handleEnroll(course.id)}
+                  onClick={() => handleRequestEnrollment(course.id)}
                   disabled={enrollMutation.isPending}
                   className="w-full"
                   size="sm"
                 >
                   {enrollMutation.isPending ? (
-                    'Enrolling...'
+                    'Sending...'
                   ) : (
                     <>
-                      <CheckCircle className="mr-2 h-4 w-4" />
-                      Enroll
+                      <Send className="mr-2 h-4 w-4" />
+                      Request Enrollment
                     </>
                   )}
                 </Button>

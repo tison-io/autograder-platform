@@ -1,14 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useMyCourses } from '@/hooks';
+import { useEnrolledCourses } from '@/hooks';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoadingCard, ErrorCard, EmptyState } from '@/components/shared';
 import { BookOpen, Users, FileText, ExternalLink, Calendar } from 'lucide-react';
 
 export default function StudentCoursesPage() {
-  const { data: courses, isLoading, error, refetch } = useMyCourses();
+  const { data: courses, isLoading, error, refetch } = useEnrolledCourses();
 
   if (isLoading) return <LoadingCard />;
   if (error) return <ErrorCard message="Failed to load courses" onRetry={refetch} />;

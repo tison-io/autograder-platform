@@ -60,6 +60,11 @@ export const coursesService = {
     return response.data;
   },
 
+  async getEnrolledCourses(): Promise<Course[]> {
+    const response = await apiClient.get<Course[]>('/courses/enrolled');
+    return response.data;
+  },
+
   async getById(id: string): Promise<Course> {
     const response = await apiClient.get<Course>(`/courses/${id}`);
     return response.data;

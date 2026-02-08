@@ -45,6 +45,12 @@ export class CourseResponseDto {
   @ApiPropertyOptional({ description: 'Number of enrolled students', example: 25 })
   enrollmentCount?: number;
 
+  @ApiPropertyOptional({ description: 'Number of assignments', example: 8 })
+  assignmentCount?: number;
+
+  @ApiPropertyOptional({ description: 'Student enrollment date' })
+  enrolledAt?: Date;
+
   @ApiProperty({ description: 'Course creation date' })
   createdAt: Date;
 

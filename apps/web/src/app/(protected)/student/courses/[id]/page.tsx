@@ -2,16 +2,22 @@
 
 import { use } from 'react';
 import Link from 'next/link';
-import { useCourse } from '@/hooks';
+import { useCourse, useAssignmentsByCourse } from '@/hooks';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoadingPage, ErrorPage, EmptyState } from '@/components/shared';
+import { AssignmentCard } from '@/components/student/assignment-card';
 import { ArrowLeft, Users, FileText } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function StudentCourseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { data: course, isLoading, error, refetch } = useCourse(id);
+  const {
+    data: assignments,
+    isLoading: assignmentsLoading,
+    error: assignmentsError,
+  } = useAssignmentsByCourse(id);
 
   if (isLoading) return <LoadingPage text="Loading course..." />;
   if (error) return <ErrorPage message="Failed to load course" onRetry={refetch} />;
@@ -104,11 +110,36 @@ export default function StudentCourseDetailPage({ params }: { params: Promise<{ 
                 <CardDescription>View and submit your assignments</CardDescription>
               </CardHeader>
               <CardContent>
-                <EmptyState
-                  icon="file"
-                  title="No assignments available"
-                  description="Your professor hasn't created any assignments yet."
-                />
+                {assignmentsLoading ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-600">Loading assignments...</p>
+                  </div>
+                ) : assignmentsError ? (
+                  <div className="text-center py-8">
+                    <p className="text-red-600">Failed to load assignments</p>
+                  </div>
+                ) : !assignments || assignments.length === 0 ? (
+                  <EmptyState
+                    icon="file"
+                    title="No assignments available"
+                    description="Your professor hasn't created any assignments yet."
+                  />
+                ) : (
+                  <div className="space-y-4">
+                    {assignments
+                      .filter((assignment) => assignment.isPublished)
+                      .map((assignment) => (
+                        <AssignmentCard key={assignment.id} assignment={assignment} courseId={id} />
+                      ))}
+                    {assignments.filter((assignment) => assignment.isPublished).length === 0 && (
+                      <EmptyState
+                        icon="file"
+                        title="No published assignments"
+                        description="Your professor hasn't published any assignments yet."
+                      />
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

@@ -118,6 +118,40 @@ export class CoursesService {
     }));
   }
 
+  async findEnrolledByStudent(studentId: string): Promise<CourseResponseDto[]> {
+    const enrollments = await this.prisma.enrollment.findMany({
+      where: { studentId },
+      include: {
+        course: {
+          include: {
+            professor: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+            _count: {
+              select: {
+                enrollments: true,
+                assignments: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { enrolledAt: 'desc' },
+    });
+
+    return enrollments.map((enrollment) => ({
+      ...this.toResponseDto(enrollment.course),
+      enrollmentCount: enrollment.course._count.enrollments,
+      assignmentCount: enrollment.course._count.assignments,
+      enrolledAt: enrollment.enrolledAt,
+    }));
+  }
+
   async update(
     id: string,
     updateCourseDto: UpdateCourseDto,

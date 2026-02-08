@@ -16,6 +16,13 @@ export function useMyCourses() {
   });
 }
 
+export function useEnrolledCourses() {
+  return useQuery({
+    queryKey: ['courses', 'enrolled'],
+    queryFn: coursesService.getEnrolledCourses,
+  });
+}
+
 export function useCourse(id: string) {
   return useQuery({
     queryKey: ['courses', id],
